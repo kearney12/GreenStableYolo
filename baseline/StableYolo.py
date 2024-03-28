@@ -183,8 +183,10 @@ def text2img(prompt, configuration={}):
     seed = configuration["seed"]
 
     generator = torch.Generator("cuda").manual_seed(seed)
+    starter, ender = torch.cuda.Event(enable_timing=True)
     print(prompt)
     print(negative_prompt)
+    starter.record()
     imagesAll = pipe(
         prompt,
         guidance_scale=guidance_scale,
@@ -194,6 +196,9 @@ def text2img(prompt, configuration={}):
         generator=generator,
         num_images_per_prompt=num_images_per_prompt,
     ).images
+    ender.record()
+    torch.cuda.synchronize()
+    inf_time = starter.ellapsed_time(ender)
     print(imagesAll)
     timestamp = calendar.timegm(time.gmtime())
     images = []
@@ -216,7 +221,7 @@ def text2img(prompt, configuration={}):
             + "."
             + "image.png"
         )
-    return images
+    return images, inf_time
 
 
 def img2text(image_path):
@@ -390,7 +395,7 @@ class GAOptimizer:
             "seed": individual["seed"],
         }
 
-        allimages = text2img(self.prompt, configuration)
+        allimages, inf_time = text2img(self.prompt, configuration)
         for currentImage in allimages:
             counting, boxesInfo = img2text(currentImage)
             print(counting)
