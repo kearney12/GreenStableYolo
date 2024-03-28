@@ -16,28 +16,40 @@
 #  Documentation for this module.
 #
 #  More details.
-import argparse
-import calendar
-import copy
-
 import random
-import time
-
-import cv2
+import math
+import sys
+import hashlib
 import numpy
-import numpy as np
+import copy
+import pandas as pd
+from deap import creator, base, tools, algorithms
 import torch
-from bs4 import BeautifulSoup
-from deap import algorithms, base, creator, tools
+from scipy.spatial.distance import cosine
+import requests
+from PIL import Image
+from statistics import mean
 
-# import schedule
+
+from ultralytics import YOLO
+
+import logging
+from bs4 import BeautifulSoup
+import requests
+import schedule
 from diffusers import (
+    StableDiffusionPipeline,
     EulerDiscreteScheduler,
     StableDiffusionImg2ImgPipeline,
-    StableDiffusionPipeline,
 )
-from scipy.spatial.distance import cosine
-from ultralytics import YOLO
+import calendar
+import time
+import numpy as np
+from io import BytesIO
+import cv2
+import random
+import argparse
+
 
 # Optimizer parameters
 # numTuples = int(ConfigSectionMap("Optimizer")['numtuples'])
@@ -59,9 +71,9 @@ fontScale = 0.5
 model_id = "stabilityai/stable-diffusion-2"
 scheduler = EulerDiscreteScheduler.from_pretrained(model_id, subfolder="scheduler")
 pipe = StableDiffusionPipeline.from_pretrained(
-    model_id, scheduler=scheduler, torch_dtype=torch.float32
+    model_id, scheduler=scheduler, torch_dtype=torch.float16
 )
-# pipe = pipe.to("cuda")
+pipe = pipe.to("cuda")
 model = YOLO("yolov8n.pt")  # load a pretrained YOLOv8n detection model
 model.train(data="coco128.yaml", epochs=3)  # train the model
 colors = np.random.randint(0, 255, size=(len(model.names), 3), dtype="uint8")
@@ -170,7 +182,7 @@ def text2img(prompt, configuration={}):
     num_images_per_prompt = 4
     seed = configuration["seed"]
 
-    generator = torch.Generator().manual_seed(seed)
+    generator = torch.Generator("cuda").manual_seed(seed)
     print(prompt)
     print(negative_prompt)
     imagesAll = pipe(
@@ -390,38 +402,3 @@ class GAOptimizer:
             return (0,)
         else:
             return (avgPrecision / totalCount,)  # individual['num_inference_steps'],
-
-
-parser = argparse.ArgumentParser(description="Improve Image Quality")
-parser.add_argument(
-    "--prompt", "-p", default="Two people and a bus", help="Prompt for the input"
-)
-args = parser.parse_args()
-
-configuration = {
-    "numgen": 50,
-    "mut_prob": 0.2,
-    "cross_prob": 0.2,
-    "num_sel": 10,
-    "mu_sel": 5,
-    "lambda_sel": 5,
-    "inner_mut_prob": 0.2,
-    "population_size": 25,
-    "tournament_sel": 5,
-    "weights": [1],
-    "prompt": args.prompt,
-}
-
-
-print("Loading data")
-print("GA")
-gen = GAOptimizer(configuration)
-
-sol, offspring, logbook = gen.optimize()
-print("Last Generation")
-print(offspring)
-print("Logs")
-print(logbook)
-print("Best")
-print(sol)
-print("Done")
