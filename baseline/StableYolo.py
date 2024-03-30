@@ -49,6 +49,7 @@ from io import BytesIO
 import cv2
 import random
 import argparse
+import os
 
 
 # Optimizer parameters
@@ -200,7 +201,9 @@ def text2img(prompt, configuration={}):
     torch.cuda.synchronize()
     inf_time = starter.ellapsed_time(ender)
     print("Inference time: ", inf_time)
-    with open(f"inf_time_{prompt.replace(' ', '_')}.txt", "w") as f:
+    with open(
+        os.path.join("inference_time", f"inf_time_{prompt.replace(' ', '_')}.txt", "w")
+    ) as f:
         f.write(str(inf_time) + "\n")
     print(imagesAll)
     timestamp = calendar.timegm(time.gmtime())
