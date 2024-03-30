@@ -399,6 +399,7 @@ class GAOptimizer:
             "negative_prompt": individual["negative_prompt"],
             "positive_prompt": individual["positive_prompt"],
             "guidance_rescale": individual["guidance_rescale"],
+            "seed": individual["seed"],
         }
 
         allimages = text2img(self.prompt, configuration)
