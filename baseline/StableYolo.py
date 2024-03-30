@@ -199,6 +199,9 @@ def text2img(prompt, configuration={}):
     ender.record()
     torch.cuda.synchronize()
     inf_time = starter.ellapsed_time(ender)
+    print("Inference time: ", inf_time)
+    with open(f"inf_time_{prompt.replace(' ', '_')}.txt", "w") as f:
+        f.write(str(inf_time) + "\n")
     print(imagesAll)
     timestamp = calendar.timegm(time.gmtime())
     images = []
@@ -221,7 +224,7 @@ def text2img(prompt, configuration={}):
             + "."
             + "image.png"
         )
-    return images, inf_time
+    return images
 
 
 def img2text(image_path):
@@ -348,6 +351,7 @@ class GAOptimizer:
         stats.register("std", numpy.std, axis=0)
         stats.register("min", numpy.min, axis=0)
         stats.register("max", numpy.max, axis=0)
+
         # toolbox.register("elitism", tools.selBest, k=numSel)
         population = toolbox.population(n=self.populationSize)
         # The genetic algorithm, this implementation ia mu+lambda
@@ -392,10 +396,9 @@ class GAOptimizer:
             "negative_prompt": individual["negative_prompt"],
             "positive_prompt": individual["positive_prompt"],
             "guidance_rescale": individual["guidance_rescale"],
-            "seed": individual["seed"],
         }
 
-        allimages, inf_time = text2img(self.prompt, configuration)
+        allimages = text2img(self.prompt, configuration)
         for currentImage in allimages:
             counting, boxesInfo = img2text(currentImage)
             print(counting)
