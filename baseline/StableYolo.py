@@ -338,7 +338,7 @@ class GAOptimizer:
     #        return 1
 
     def optimize(self):
-        #        creator.create("FitnessMin", base.Fitness, weights=(-1.0,-1.0,-1.0))
+        os.makedirs("inference_time", exist_ok=True)
         creator.create("FitnessMax", base.Fitness, weights=self.weights)
         creator.create("Individual", dict, fitness=creator.FitnessMax)
         toolbox = base.Toolbox()
