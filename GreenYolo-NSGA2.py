@@ -182,10 +182,10 @@ def text2img(prompt, configuration={}):
     ).images
     ender.record()
     torch.cuda.synchronize()
-    inference_time = starter.elapsed_time(ender)
+    inference_time = starter.elapsed_time(ender) / 60000 # compute inference time in minutes
 
-    print(inference_time)
-    print(imagesAll)
+    # print(inference_time)
+    # print(imagesAll)
     timestamp = calendar.timegm(time.gmtime())
     images = []
     for i, image in enumerate(imagesAll):
@@ -325,7 +325,7 @@ class NSGA2Optimizer:
             mutpb=self.mutProb,
             ngen=self.numGen,
             verbose = True,
-            #stats=stats,
+            stats=stats,
             #halloffame=hof
         )
         pareto_front = tools.sortNondominated(population, len(population), first_front_only=True)
@@ -335,7 +335,7 @@ class NSGA2Optimizer:
         # topTen = tools.selBest(population, k=10)
         # print(topTen)
         best = tools.selBest(population, k=1)
-        return best[0], offspring, logbook, pareto_front[0]
+        return best[0], offspring, logbook, pareto_front
 
     def get_caption_similarity(self, text_a, text_b):
         texts = [text_a, text_b]
@@ -396,17 +396,20 @@ configuration = {
     "prompt": prompt,
 }
 
-print("Loading data")
-print("NSGA2")
+print("\n - Loading data...")
+print("\n - Running NSGA2...")
 gen = NSGA2Optimizer(configuration)
 
 sol, offspring, logbook, hof = gen.optimize()
-print("Last Generation")
-print(offspring)
-print("Logs")
+print("\n - Last Generation: ")
+# print(offspring)
+for ind in offspring:
+    print(ind)
+    print(ind.fitness.values)
+print("\n - Logs")
 print(logbook)
-print("Best")
+print("\n - Best individual")
 print(sol)
-print("Hall of fame")
+print("\n - Pareto front")
 print(hof)
-print("Done")
+print("\n - Done.")
