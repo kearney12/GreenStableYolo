@@ -224,7 +224,7 @@ def img2text(image_path):
     return counting, boxesInfo
 
 
-class NASG2Optimizer:
+class NSGA2Optimizer:
 
     def __init__(self, options={}, others={}):
         # GA parameters
@@ -397,8 +397,8 @@ configuration = {
 }
 
 print("Loading data")
-print("NASG2")
-gen = NASG2Optimizer(configuration)
+print("NSGA2")
+gen = NSGA2Optimizer(configuration)
 
 sol, offspring, logbook, hof = gen.optimize()
 print("Last Generation")
