@@ -13,6 +13,8 @@ from PIL import Image
 from statistics import mean
 from ultralytics import YOLO
 import time
+import os
+import csv
 
 import logging
 from bs4 import BeautifulSoup
@@ -182,7 +184,7 @@ def text2img(prompt, configuration={}):
     ).images
     ender.record()
     torch.cuda.synchronize()
-    inference_time = starter.elapsed_time(ender) / 60000 # compute inference time in minutes
+    inference_time = starter.elapsed_time(ender) # compute inference time in minutes
 
     # print(inference_time)
     # print(imagesAll)
@@ -335,7 +337,7 @@ class NSGA2Optimizer:
         # topTen = tools.selBest(population, k=10)
         # print(topTen)
         best = tools.selBest(population, k=1)
-        return best[0], offspring, logbook, pareto_front
+        return best[0], offspring, logbook, pareto_front[0]
 
     def get_caption_similarity(self, text_a, text_b):
         texts = [text_a, text_b]
@@ -351,7 +353,7 @@ class NSGA2Optimizer:
         return similarity_score
 
     def evalFitness(self, individual):
-        print("Fitness")
+        print("Evaluating Fitness")
         avgPrecision = 0
         totalCount = 0
         configuration = {
@@ -380,36 +382,55 @@ class NSGA2Optimizer:
         print('inference_time: ', inference_time)
         return image_quality, inference_time #maximize image_quality and minimize inf_time
 
+
+
+n_experiments = 5
 prompt = "Two people and a bus"
 
 configuration = {
-    "numgen": 2,
+    "numgen": 50,
     "mut_prob": 0.2,
     "cross_prob": 0.2,
     "num_sel": 10,
     "mu_sel": 5,
     "lambda_sel": 5,
     "inner_mut_prob": 0.2,
-    "population_size": 2,
+    "population_size": 25,
     "tournament_sel": 5,
     "weights": (1.0, -1.0),
     "prompt": prompt,
 }
 
-print("\n - Loading data...")
-print("\n - Running NSGA2...")
-gen = NSGA2Optimizer(configuration)
+folder = '{}/results'.format(os.getcwd())
+os.makedirs(folder, exist_ok=True)
+filename = '{}/GreenYolo_results_numgen{}_popsize{}.csv'.format(folder, configuration["numgen"], configuration["population_size"])
 
-sol, offspring, logbook, hof = gen.optimize()
-print("\n - Last Generation: ")
-# print(offspring)
-for ind in offspring:
-    print(ind)
-    print(ind.fitness.values)
-print("\n - Logs")
-print(logbook)
-print("\n - Best individual")
-print(sol)
-print("\n - Pareto front")
-print(hof)
-print("\n - Done.")
+for ne in range(n_experiments):
+    print("Run: ", ne+1)
+    print("\n - Running NSGA2...")
+    gen = NSGA2Optimizer(configuration)
+
+    sol, offspring, logbook, pareto_front = gen.optimize()
+    print("\n - Logs")
+    print(logbook)
+    print("\n - Last Generation: ")
+    for ind in offspring:
+        print(ind)
+        print(ind.fitness.values)
+    print("\n - Best individual")
+    print(sol)
+    print(sol.fitness.values)
+    print("\n - Pareto front")
+    for ind in pareto_front:
+        print(ind)
+        print(ind.fitness.values)
+
+    # Open the CSV file in append mode (create if not exists)
+    with open(filename, 'a', newline='') as csvfile:
+        # Create a CSV writer object
+        writer = csv.writer(csvfile)
+        # Write the dictionary string to the CSV file
+        writer.writerow([ne+1, sol] + [ind for ind in pareto_front])
+        writer.writerow([ne+1, sol.fitness.values] + [ind.fitness.values for ind in pareto_front])
+
+    print("\n - Done.")
