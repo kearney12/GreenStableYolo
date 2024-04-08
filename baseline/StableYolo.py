@@ -202,9 +202,7 @@ def text2img(prompt, configuration={}, inference=False):
     ).images
     ender.record()
     torch.cuda.synchronize()
-    inference_time = (
-        starter.elapsed_time(ender) / 60000
-    )  # compute inference time in minutes
+    inference_time = starter.elapsed_time(ender)
 
     print("\n - inference_time: ", inference_time)
     # print(imagesAll)
@@ -456,7 +454,7 @@ for ne in range(n_experiments):
     print("GA")
     gen = GAOptimizer(configuration)
 
-    sol, offspring, logbook = gen.optimize()
+    sol, offspring, logbook, inf_time = gen.optimize()
     print("\n - Last Generation: ")
     # print(offspring)
     for ind in offspring:
@@ -474,6 +472,6 @@ for ne in range(n_experiments):
         writer = csv.writer(csvfile)
         # Write the dictionary string to the CSV file
         writer.writerow([ne + 1, sol])
-        writer.writerow([ne + 1, sol.fitness.values])
+        writer.writerow([ne + 1, sol.fitness.values, inf_time])
 
     print("\n - Done.")
