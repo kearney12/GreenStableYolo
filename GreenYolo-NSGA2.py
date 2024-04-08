@@ -384,7 +384,7 @@ class NSGA2Optimizer:
 
 
 
-n_experiments = 5
+n_experiments = 15
 prompt = "Two people and a bus"
 
 configuration = {
