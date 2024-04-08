@@ -36,7 +36,11 @@ import logging
 from bs4 import BeautifulSoup
 import requests
 import schedule
-from diffusers import StableDiffusionPipeline, EulerDiscreteScheduler, StableDiffusionImg2ImgPipeline
+from diffusers import (
+    StableDiffusionPipeline,
+    EulerDiscreteScheduler,
+    StableDiffusionImg2ImgPipeline,
+)
 import calendar
 import time
 import numpy as np
@@ -50,11 +54,12 @@ import csv
 # Optimizer parameters
 # numTuples = int(ConfigSectionMap("Optimizer")['numtuples'])
 
+
 def int_to_binary_and_select_elements(integer, element_list):
     binary_representation = bin(integer)[2:]
     selected_elements = []
     for i, digit in enumerate(binary_representation):
-        if digit == '1':
+        if digit == "1":
             selected_elements.append(element_list[i])
     return selected_elements
 
@@ -65,10 +70,12 @@ fontScale = 0.5
 
 model_id = "stabilityai/stable-diffusion-2"
 scheduler = EulerDiscreteScheduler.from_pretrained(model_id, subfolder="scheduler")
-pipe = StableDiffusionPipeline.from_pretrained(model_id, scheduler=scheduler, torch_dtype=torch.float16)
+pipe = StableDiffusionPipeline.from_pretrained(
+    model_id, scheduler=scheduler, torch_dtype=torch.float16
+)
 pipe = pipe.to("cuda")
-model = YOLO('yolov8n.pt')  # load a pretrained YOLOv8n detection model
-model.train(data='coco128.yaml', epochs=3)  # train the model
+model = YOLO("yolov8n.pt")  # load a pretrained YOLOv8n detection model
+model.train(data="coco128.yaml", epochs=3)  # train the model
 colors = np.random.randint(0, 255, size=(len(model.names), 3), dtype="uint8")
 
 
@@ -87,42 +94,86 @@ def addBoxesImage(currentImage, boxesInfo):
         confidence = box[2]
         color = [int(c) for c in colors[list(model.names.values()).index(class_id)]]
         #        color = colors[list(model.names.values()).index(class_id)]
-        cv2.rectangle(image, (box[1][0], box[1][1]), (box[1][2], box[1][3]), color=color, thickness=thickness)
+        cv2.rectangle(
+            image,
+            (box[1][0], box[1][1]),
+            (box[1][2], box[1][3]),
+            color=color,
+            thickness=thickness,
+        )
         text = f"{class_id}: {confidence:.2f}"
-        (text_width, text_height) = \
-        cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, fontScale=fontScale, thickness=thickness)[0]
+        (text_width, text_height) = cv2.getTextSize(
+            text, cv2.FONT_HERSHEY_SIMPLEX, fontScale=fontScale, thickness=thickness
+        )[0]
         text_offset_x = box[1][0]
         text_offset_y = box[1][1] - 5
-        box_coords = ((text_offset_x, text_offset_y), (text_offset_x + text_width + 2, text_offset_y - text_height))
+        box_coords = (
+            (text_offset_x, text_offset_y),
+            (text_offset_x + text_width + 2, text_offset_y - text_height),
+        )
         overlay = image.copy()
-        cv2.rectangle(overlay, box_coords[0], box_coords[1], color=color, thickness=cv2.FILLED)
+        cv2.rectangle(
+            overlay, box_coords[0], box_coords[1], color=color, thickness=cv2.FILLED
+        )
         image = cv2.addWeighted(overlay, 0.6, image, 0.4, 0)
-        cv2.putText(image, text, (box[1][0], box[1][1] - 5), cv2.FONT_HERSHEY_SIMPLEX,
-                    fontScale=fontScale, color=(0, 0, 0), thickness=thickness)
+        cv2.putText(
+            image,
+            text,
+            (box[1][0], box[1][1] - 5),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            fontScale=fontScale,
+            color=(0, 0, 0),
+            thickness=thickness,
+        )
     cv2.imwrite(currentImage + "_yolo8.png", image)
 
 
 def createNegativePrompt(selection):
-    items = ['illustration', 'painting', 'drawing', 'art', 'sketch', 'lowres', 'error', 'cropped', 'worst quality',
-             'low quality', 'jpeg artifacts', 'out of frame', 'watermark', 'signature']
+    items = [
+        "illustration",
+        "painting",
+        "drawing",
+        "art",
+        "sketch",
+        "lowres",
+        "error",
+        "cropped",
+        "worst quality",
+        "low quality",
+        "jpeg artifacts",
+        "out of frame",
+        "watermark",
+        "signature",
+    ]
     # integer_input =  random.randint(0,2**len(fixed_length_list)-1)
-    if (selection > 2 ** len(items) - 1):
+    if selection > 2 ** len(items) - 1:
         selection %= 2 ** len(items) - 1
     selected_elements = int_to_binary_and_select_elements(selection, items)
     return ", ".join(selected_elements)
 
 
 def createPosPrompt(prompt, selection):
-    items = ['photograph', 'digital', 'color', 'Ultra Real', 'film grain', 'Kodak portra 800', 'Depth of field 100mm',
-             'overlapping compositions', 'blended visuals', 'trending on artstation', 'award winning']
+    items = [
+        "photograph",
+        "digital",
+        "color",
+        "Ultra Real",
+        "film grain",
+        "Kodak portra 800",
+        "Depth of field 100mm",
+        "overlapping compositions",
+        "blended visuals",
+        "trending on artstation",
+        "award winning",
+    ]
     # integer_input =  random.randint(0,2**len(fixed_length_list)-1)
-    if (selection > 2 ** len(items) - 1):
+    if selection > 2 ** len(items) - 1:
         selection %= 2 ** len(items) - 1
     selected_elements = int_to_binary_and_select_elements(selection, items)
     return prompt + ", " + ", ".join(selected_elements)
 
 
-def text2img(prompt, configuration={}):
+def text2img(prompt, configuration={}, inference=False):
     num_inference_steps = configuration["num_inference_steps"]
     guidance_scale = configuration["guidance_scale"]
     negative_prompt = createNegativePrompt(configuration["negative_prompt"])
@@ -135,8 +186,10 @@ def text2img(prompt, configuration={}):
     print(prompt)
     print(negative_prompt)
 
-    #Measure GPU time
-    starter, ender = torch.cuda.Event(enable_timing=True), torch.cuda.Event(enable_timing=True)
+    # Measure GPU time
+    starter, ender = torch.cuda.Event(enable_timing=True), torch.cuda.Event(
+        enable_timing=True
+    )
     starter.record()
     imagesAll = pipe(
         prompt,
@@ -149,9 +202,11 @@ def text2img(prompt, configuration={}):
     ).images
     ender.record()
     torch.cuda.synchronize()
-    inference_time = starter.elapsed_time(ender) / 60000 # compute inference time in minutes
+    inference_time = (
+        starter.elapsed_time(ender) / 60000
+    )  # compute inference time in minutes
 
-    print('\n - inference_time: ', inference_time)
+    print("\n - inference_time: ", inference_time)
     # print(imagesAll)
     timestamp = calendar.timegm(time.gmtime())
     images = []
@@ -174,7 +229,10 @@ def text2img(prompt, configuration={}):
             + "."
             + "image.png"
         )
-    return images
+    if not inference:
+        return images
+    else:
+        return images, inference_time
 
 
 def img2text(image_path):
@@ -184,7 +242,7 @@ def img2text(image_path):
     for box in result[0].boxes:
         currentBox = read_box(box)
         boxesInfo.append(currentBox)
-        if (currentBox[0] in counting.keys()):
+        if currentBox[0] in counting.keys():
             counting[currentBox[0]] += 1
         else:
             counting[currentBox[0]] = 1
@@ -195,15 +253,15 @@ class GAOptimizer:
 
     def __init__(self, options={}, others={}):
         # GA parameters
-        self.numGen = int(options['numgen'])
-        self.mutProb = float(options['mut_prob'])
-        self.crossProb = float(options['cross_prob'])
-        self.numSel = int(options['num_sel'])
-        self.muSel = int(options['mu_sel'])
-        self.lambdaSel = int(options['lambda_sel'])
-        self.innerMutProb = float(options['inner_mut_prob'])
-        self.populationSize = int(options['population_size'])
-        self.tournamentSel = int(options['tournament_sel'])
+        self.numGen = int(options["numgen"])
+        self.mutProb = float(options["mut_prob"])
+        self.crossProb = float(options["cross_prob"])
+        self.numSel = int(options["num_sel"])
+        self.muSel = int(options["mu_sel"])
+        self.lambdaSel = int(options["lambda_sel"])
+        self.innerMutProb = float(options["inner_mut_prob"])
+        self.populationSize = int(options["population_size"])
+        self.tournamentSel = int(options["tournament_sel"])
         self.weights = options["weights"]
         self.prompt = options["prompt"]
 
@@ -218,13 +276,14 @@ class GAOptimizer:
 
     def createElem(self):
         param_ranges_dict = {
-            'num_inference_steps': random.randint(1, 100),  # Number of denoising steps
-            'guidance_scale': 20 * random.uniform(0, 1),  # Scale for classifier-free guidance
-            'negative_prompt': random.randint(1, 2 ** 9),
-            'positive_prompt': random.randint(1, 2 ** 14),
-            'guidance_rescale': random.uniform(0, 1),
-            'num_images_per_prompt': 4,
-            'seed': random.randint(1, 2 ** 9)
+            "num_inference_steps": random.randint(1, 100),  # Number of denoising steps
+            "guidance_scale": 20
+            * random.uniform(0, 1),  # Scale for classifier-free guidance
+            "negative_prompt": random.randint(1, 2**9),
+            "positive_prompt": random.randint(1, 2**14),
+            "guidance_rescale": random.uniform(0, 1),
+            "num_images_per_prompt": 4,
+            "seed": random.randint(1, 2**9),
         }
         return param_ranges_dict
 
@@ -251,7 +310,7 @@ class GAOptimizer:
         for elem in individual.keys():
             if random.random() < self.innerMutProb:
                 ind2[elem] = mutInd[elem]
-        return ind2,
+        return (ind2,)
 
     def crossOverDict(self, ind1, ind2):
         #        return ind1,ind2
@@ -260,9 +319,9 @@ class GAOptimizer:
         chrom1_list = [(k, v) for k, v in ind1.items()]
         chrom2_list = [(m, n) for m, n in ind2.items()]
 
-        offspring_1 = chrom1_list[1:cutpoint] + chrom2_list[cutpoint: len(chrom2_list)]
+        offspring_1 = chrom1_list[1:cutpoint] + chrom2_list[cutpoint : len(chrom2_list)]
 
-        offspring_2 = chrom2_list[1:cutpoint] + chrom1_list[cutpoint: len(chrom1_list)]
+        offspring_2 = chrom2_list[1:cutpoint] + chrom1_list[cutpoint : len(chrom1_list)]
         print("Showing the offprint")
         print(offspring_1)
         offspring_1 = dict(offspring_1)
@@ -305,21 +364,33 @@ class GAOptimizer:
         # The genetic algorithm, this implementation ia mu+lambda
         # it is feeded with a population of individuals, a mutation
         # and crossover probabilities and a number of generations
-        offspring, logbook = algorithms.eaMuCommaLambda(population, toolbox, mu=self.muSel, lambda_=self.lambdaSel,
-                                                        cxpb=self.crossProb, mutpb=self.mutProb, ngen=self.numGen,
-                                                        stats=stats)
+        offspring, logbook = algorithms.eaMuCommaLambda(
+            population,
+            toolbox,
+            mu=self.muSel,
+            lambda_=self.lambdaSel,
+            cxpb=self.crossProb,
+            mutpb=self.mutProb,
+            ngen=self.numGen,
+            stats=stats,
+        )
         # the top ten individuals are printed
         # topTen = tools.selBest(population, k=10)
         # print(topTen)
         best = tools.selBest(population, k=1)
-        return best[0], offspring, logbook
+        _, inference_time = text2img(self.prompt, best[0], True)
+        return best[0], offspring, logbook, inference_time
 
     def get_caption_similarity(self, text_a, text_b):
         texts = [text_a, text_b]
-        inputs = self.tokenizer(texts, padding=True, truncation=True, return_tensors="pt")
+        inputs = self.tokenizer(
+            texts, padding=True, truncation=True, return_tensors="pt"
+        )
         # Get the embeddings
         with torch.no_grad():
-            embeddings = self.modelText(**inputs, output_hidden_states=True, return_dict=True).pooler_output
+            embeddings = self.modelText(
+                **inputs, output_hidden_states=True, return_dict=True
+            ).pooler_output
         similarity_score = 1 - cosine(embeddings[0], embeddings[1])
         return similarity_score
 
@@ -328,12 +399,12 @@ class GAOptimizer:
         avgPrecision = 0
         totalCount = 0
         configuration = {
-            'num_inference_steps': individual['num_inference_steps'],
-            'guidance_scale': individual['guidance_scale'],
-            'negative_prompt': individual['negative_prompt'],
-            'positive_prompt': individual['positive_prompt'],
-            'guidance_rescale': individual['guidance_rescale'],
-            'seed': individual['seed']
+            "num_inference_steps": individual["num_inference_steps"],
+            "guidance_scale": individual["guidance_scale"],
+            "negative_prompt": individual["negative_prompt"],
+            "positive_prompt": individual["positive_prompt"],
+            "guidance_rescale": individual["guidance_rescale"],
+            "seed": individual["seed"],
         }
 
         allimages = text2img(self.prompt, configuration)
@@ -344,44 +415,48 @@ class GAOptimizer:
             for box in boxesInfo:
                 totalCount += 1
                 avgPrecision += box[2]
-        if (avgPrecision == 0):
-            return 0,
+        if avgPrecision == 0:
+            return (0,)
         else:
-            return avgPrecision / totalCount,  # individual['num_inference_steps'],
+            return (avgPrecision / totalCount,)  # individual['num_inference_steps'],
 
 
 n_experiments = 10
 
 parser = argparse.ArgumentParser(description="Improve Image Quality")
-parser.add_argument('--prompt','-p', default="Two people and a bus", help="Prompt for the input")
+parser.add_argument(
+    "--prompt", "-p", default="Two people and a bus", help="Prompt for the input"
+)
 args = parser.parse_args()
 
-configuration={
-    'numgen': 50,
-    'mut_prob': 0.2,
-    'cross_prob':0.2,
-    'num_sel':10,
-    'mu_sel':5,
-    'lambda_sel':5,
-    'inner_mut_prob':0.2,
-    'population_size':25,
-    'tournament_sel':5,
-    'weights':[1],
-    'prompt':args.prompt
-    }
+configuration = {
+    "numgen": 50,
+    "mut_prob": 0.2,
+    "cross_prob": 0.2,
+    "num_sel": 10,
+    "mu_sel": 5,
+    "lambda_sel": 5,
+    "inner_mut_prob": 0.2,
+    "population_size": 25,
+    "tournament_sel": 5,
+    "weights": [1],
+    "prompt": args.prompt,
+}
 
 
-folder = '{}/results'.format(os.getcwd())
+folder = "{}/results".format(os.getcwd())
 os.makedirs(folder, exist_ok=True)
-filename = '{}/StableYolo_results_numgen{}_popsize{}.csv'.format(folder, configuration["numgen"], configuration["population_size"])
+filename = "{}/StableYolo_results_numgen{}_popsize{}.csv".format(
+    folder, configuration["numgen"], configuration["population_size"]
+)
 
 for ne in range(n_experiments):
-    print("Run: ", ne+1)
+    print("Run: ", ne + 1)
     print("Loading data")
     print("GA")
     gen = GAOptimizer(configuration)
 
-    sol,offspring,logbook = gen.optimize()
+    sol, offspring, logbook = gen.optimize()
     print("\n - Last Generation: ")
     # print(offspring)
     for ind in offspring:
@@ -394,11 +469,11 @@ for ne in range(n_experiments):
     print(sol.fitness.values)
 
     # Open the CSV file in append mode (create if not exists)
-    with open(filename, 'a', newline='') as csvfile:
+    with open(filename, "a", newline="") as csvfile:
         # Create a CSV writer object
         writer = csv.writer(csvfile)
         # Write the dictionary string to the CSV file
-        writer.writerow([ne+1, sol])
-        writer.writerow([ne+1, sol.fitness.values])
+        writer.writerow([ne + 1, sol])
+        writer.writerow([ne + 1, sol.fitness.values])
 
     print("\n - Done.")
