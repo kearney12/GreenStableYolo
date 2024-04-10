@@ -51,7 +51,7 @@ with open(csv_file, "r") as file:
                     if plot_points:
                         # plt.title('{}'.format(dir_data.replace('Data/', '').replace('.csv', '').replace('_AllNumeric', '')))
                         for point in hypervolume_points:
-                            plt.scatter(point[0], point[1], color='blue', label='Ref_point')
+                            plt.scatter(point[0], point[1], color='blue', label='GreenYolo')
                         plt.scatter(ref_point[0], ref_point[1], color='black', label='Ref_point')
                         plt.xlabel("1-image_quality")
                         plt.ylabel("inference_time", labelpad=5)
@@ -93,7 +93,7 @@ with open(csv_file, "r") as file:
                 if plot_points:
                     # plt.title('{}'.format(dir_data.replace('Data/', '').replace('.csv', '').replace('_AllNumeric', '')))
                     for point in hypervolume_points:
-                        plt.scatter(point[0], point[1], color='red', label='Ref_point')
+                        plt.scatter(point[0], point[1], color='red', label='StableYolo')
                     plt.scatter(ref_point[0], ref_point[1], color='black', label='Ref_point')
                     plt.xlabel("1-image_quality")
                     plt.ylabel("inference_time", labelpad=5)
