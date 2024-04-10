@@ -1,0 +1,20 @@
+1,"{'num_inference_steps': 8, 'guidance_scale': 8.955829206299539, 'negative_prompt': 163, 'positive_prompt': 2041, 'guidance_rescale': 0.8050278270130223, 'num_images_per_prompt': 4, 'seed': 83}",
+1,"(0.7871428571428571,)",4233.383789
+2,"{'num_inference_steps': 60, 'guidance_scale': 14.584318178528717, 'negative_prompt': 480, 'positive_prompt': 95, 'guidance_rescale': 0.19768354756131756, 'num_images_per_prompt': 4, 'seed': 303}",
+2,"(0.8450000000000001,)",26036.71094
+3,"{'num_inference_steps': 90, 'guidance_scale': 19.90922660610834, 'negative_prompt': 388, 'positive_prompt': 7119, 'guidance_rescale': 0.4954547796216574, 'num_images_per_prompt': 4, 'seed': 498}",
+3,"(0.7861538461538462,)",38618.97266
+4,"{'num_inference_steps': 38, 'guidance_scale': 7.358997082732053, 'negative_prompt': 155, 'positive_prompt': 4855, 'guidance_rescale': 0.6530711464377894, 'num_images_per_prompt': 4, 'seed': 218}",
+4,"(0.8308333333333334,)",16837.17773
+5,"{'num_inference_steps': 93, 'guidance_scale': 17.913953755000147, 'negative_prompt': 275, 'positive_prompt': 4818, 'guidance_rescale': 0.5457061916708511, 'num_images_per_prompt': 4, 'seed': 216}",
+5,"(0.7729411764705881,)",40046.15625
+6,"{'num_inference_steps': 63, 'guidance_scale': 10.091213626001384, 'negative_prompt': 172, 'positive_prompt': 11333, 'guidance_rescale': 0.5777460942726259, 'num_images_per_prompt': 4, 'seed': 20}",
+6,"(0.7441666666666666,)",27383.30078
+7,"{'num_inference_steps': 52, 'guidance_scale': 12.422427600989877, 'negative_prompt': 286, 'positive_prompt': 1657, 'guidance_rescale': 0.7951077967853688, 'num_images_per_prompt': 4, 'seed': 398}",
+7,"(0.8558333333333333,)",22764.11133
+8,"{'num_inference_steps': 54, 'guidance_scale': 16.621973238701507, 'negative_prompt': 368, 'positive_prompt': 13036, 'guidance_rescale': 0.45922156634654077, 'num_images_per_prompt': 4, 'seed': 107}",
+8,"(0.8133333333333331,)",23600.7832
+9,"{'num_inference_steps': 70, 'guidance_scale': 4.868425284781226, 'negative_prompt': 465, 'positive_prompt': 2451, 'guidance_rescale': 0.9371139793782709, 'num_images_per_prompt': 4, 'seed': 226}",
+9,"(0.8279999999999998,)",30347.85742
+10,"{'num_inference_steps': 45, 'guidance_scale': 12.676096064705662, 'negative_prompt': 263, 'positive_prompt': 14343, 'guidance_rescale': 0.16761226987701527, 'num_images_per_prompt': 4, 'seed': 471}",
+10,"(0.8463636363636362,)",19792.20898
